@@ -1,0 +1,20 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local environment files
+.env
+.venv
+venv/
+env/
+ENV/
+
+# Large binary student images, booklets, and database files
+Zesje Offline Grading Software/data/
+**/data/
+
+# OS/System files
+.DS_Store
+Thumbs.db

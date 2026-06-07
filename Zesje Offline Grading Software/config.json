@@ -1,0 +1,13 @@
+{
+    "zesje_base_url": "https://tn2211-2026.zesje.tudelft.nl",
+    "exam_id": 3,
+    "firefox_binary": "C:\\Program Files\\Mozilla Firefox\\firefox.exe",
+    "firefox_profile_path": "C:\\Users\\Deuts\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\39shiy81.default-release",
+    "geckodriver_path": "C:\\Geckodriver.exe",
+    "problem_mapping": {
+        "1": "1a",
+        "2": "1b",
+        "3": "1b_ext"
+    },
+    "total_students": 121
+}

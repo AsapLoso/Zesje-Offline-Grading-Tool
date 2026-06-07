@@ -1,0 +1,4 @@
+selenium-wire
+google-generativeai
+pillow
+pandas
