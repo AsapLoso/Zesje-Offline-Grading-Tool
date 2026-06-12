@@ -18,3 +18,9 @@ Zesje Offline Grading Software/data/
 # OS/System files
 .DS_Store
 Thumbs.db
+
+# Suggested README & local demo/backup files
+README_suggested.md
+Zesje Offline Grading Software/config.json.bak
+Zesje Offline Grading Software/generate_demo.py
+_local_assets/

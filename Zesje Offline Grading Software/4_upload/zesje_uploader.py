@@ -232,8 +232,9 @@ def upload_grades(dry_run=False):
                         print(f"  Keys sent to browser.")
                     if not prompt("Keys registered in Zesje? Press ENTER to continue to next page"):
                         print("\nStopped. Progress saved."); return
-                save_progress(key)
-                uploaded.add(key)
+                if not dry_run:
+                    save_progress(key)
+                    uploaded.add(key)
 
         print("\n" + "=" * 60 + "\n  DONE!\n" + "=" * 60)
     except KeyboardInterrupt:
@@ -244,4 +245,5 @@ def upload_grades(dry_run=False):
         if driver: driver.quit()
 
 if __name__ == "__main__":
-    upload_grades()
+    dry_run = "--dry-run" in sys.argv
+    upload_grades(dry_run=dry_run)
