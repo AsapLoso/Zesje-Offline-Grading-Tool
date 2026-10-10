@@ -61,32 +61,15 @@ def main():
 
     base_url, exam_id, course_name = parse_exam_url(raw_input_url)
     if not exam_id:
-        print("   Could not detect exam ID from URL. Please enter manually.")
-        exam_id = int(input("   Exam ID (number): ").strip())
-
-    dataset_dir_name = f"data_{course_name}_exam{exam_id}" if course_name else "data"
-    dataset_dir = os.path.join(REPO_ROOT, dataset_dir_name)
-    os.makedirs(dataset_dir, exist_ok=True)
-
-    print(f"   -> Detected Base URL:   {base_url}")
-    print(f"   -> Detected Exam ID:    {exam_id}")
-    print(f"   -> Dataset Directory:   {dataset_dir_name}/")
-    print()
+        print("   [i] Geen exam ID direct in link gevonden.")
+        print("       Geen zorgen: de browser opent zo meteen de site. Navigeer naar het gewenste")
+        print("       examen of grading scherm, dan leest het script het Exam ID automatisch uit!")
+        exam_id = None
 
     # Load existing config or defaults
     config = {}
-    dataset_config_path = os.path.join(dataset_dir, "config.json")
-    if os.path.exists(dataset_config_path):
-        try:
-            with open(dataset_config_path, "r", encoding="utf-8") as f:
-                config = json.load(f)
-        except Exception:
-            pass
-
     config["zesje_base_url"] = base_url
-    config["exam_id"] = exam_id
     config["course_name"] = course_name
-    config["data_dir"] = dataset_dir_name
     if not config.get("firefox_profile_path"):
         config["firefox_profile_path"] = detect_firefox_profile()
     if not config.get("firefox_binary"):
@@ -96,11 +79,11 @@ def main():
 
     # STAP 2: Open Browser and instruct navigation
     print("=" * 65)
-    print("2. OPENING BROWSER FOR INTERACTIVE QUESTION DISCOVERY")
+    print("2. OPENING BROWSER FOR INTERACTIVE DISCOVERY")
     print("=" * 65)
     print("A browser window will now open.")
     print("  a. Log in with your NetID / SSO if needed.")
-    print("  b. Navigate to the exam overview or a submission page.")
+    print("  b. Navigeer naar het specifieke examen of grading overzicht.")
     print("=" * 65)
     
     from selenium import webdriver
@@ -119,11 +102,29 @@ def main():
     driver = webdriver.Firefox(service=service, options=options)
 
     try:
-        landing_url = f"{base_url}/exams/{exam_id}"
+        landing_url = f"{base_url}/exams/{exam_id}" if exam_id else base_url
         driver.get(landing_url)
         time.sleep(2)
 
-        input("\n>>> Logged in and ready? Press [ENTER] to configure questions... ")
+        input("\n>>> Klaar met inloggen & genavigeerd naar het examen? Druk op [ENTER]... ")
+
+        # If exam_id wasn't known yet, extract it live from browser URL
+        if not exam_id:
+            curr_url = driver.current_url
+            m_exam = re.search(r"/exams/(\d+)", curr_url)
+            if m_exam:
+                exam_id = int(m_exam.group(1))
+                print(f"   -> Automatisch Exam ID {exam_id} gedetecteerd uit URL!")
+            else:
+                exam_id_input = input("   Exam ID kon niet uit URL gehaald worden. Voer Exam ID in (getal): ").strip()
+                exam_id = int(exam_id_input) if exam_id_input.isdigit() else 1
+
+        config["exam_id"] = exam_id
+        dataset_dir_name = f"data_{course_name}_exam{exam_id}" if course_name else f"data_exam{exam_id}"
+        dataset_dir = os.path.join(REPO_ROOT, dataset_dir_name)
+        os.makedirs(dataset_dir, exist_ok=True)
+        config["data_dir"] = dataset_dir_name
+        dataset_config_path = os.path.join(dataset_dir, "config.json")
 
         # Interactive Question Logging
         print("\n" + "=" * 65)
