@@ -24,3 +24,8 @@ README_suggested.md
 Zesje Offline Grading Software/config.json.bak
 Zesje Offline Grading Software/generate_demo.py
 _local_assets/
+
+# Local binaries and agent worker configs
+geckodriver.exe
+**/geckodriver.exe
+OpenCode_Worker/
