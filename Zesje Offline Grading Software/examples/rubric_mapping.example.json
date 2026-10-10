@@ -1,0 +1,82 @@
+{
+    "_instructions": "Dit bestand definieert per opgave welke sneltoets (1..N) welk rubric-item activeert en welke toets 'alles goed' vs 'alles fout' is. Het extractiescript (1_scrape/extract_rubric.py) genereert de structuur automatisch. Jij geeft per vraag aan welke toets correct is.",
+    "example_question_1": {
+        "problem_id": "1",
+        "all_correct_keystroke": "6",
+        "all_incorrect_keystroke": "1",
+        "options": [
+            {
+                "keystroke": "1",
+                "feedback_id": "50",
+                "text": "Blanco / Fout (0 pt)"
+            },
+            {
+                "keystroke": "2",
+                "feedback_id": "54",
+                "text": "Correcte eigenwaarden (1 pt)"
+            },
+            {
+                "keystroke": "3",
+                "feedback_id": "55",
+                "text": "am = gm (0 pt)"
+            },
+            {
+                "keystroke": "4",
+                "feedback_id": "56",
+                "text": "Algebraïsch correct uitwerken (1 pt)"
+            },
+            {
+                "keystroke": "5",
+                "feedback_id": "57",
+                "text": "Correct eindantwoord c=-i (1 pt)"
+            },
+            {
+                "keystroke": "6",
+                "feedback_id": "58",
+                "text": "All good! (4 pt - Alles goed)"
+            }
+        ]
+    },
+    "example_question_8": {
+        "problem_id": "9",
+        "all_correct_keystroke": "1",
+        "all_incorrect_keystroke": "7",
+        "options": [
+            {
+                "keystroke": "1",
+                "feedback_id": "26",
+                "text": "Totaal (alle correct) (5 pt - Alles goed)"
+            },
+            {
+                "keystroke": "2",
+                "feedback_id": "27",
+                "text": "Berekent dat My != Nx en concludeert niet exact (1 pt)"
+            },
+            {
+                "keystroke": "3",
+                "feedback_id": "28",
+                "text": "Vindt integrerende factor mu(y) (1 pt)"
+            },
+            {
+                "keystroke": "4",
+                "feedback_id": "29",
+                "text": "Juiste Phi(x,y) na 1e integratie (1 pt)"
+            },
+            {
+                "keystroke": "5",
+                "feedback_id": "30",
+                "text": "Juiste f(y) gevonden (1 pt)"
+            },
+            {
+                "keystroke": "6",
+                "feedback_id": "31",
+                "text": "Algemene oplossing Phi=C (1 pt)"
+            },
+            {
+                "keystroke": "7",
+                "feedback_id": "32",
+                "text": "Blank / alles fout (0 pt)"
+            }
+        ]
+    }
+}

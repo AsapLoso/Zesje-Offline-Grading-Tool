@@ -75,6 +75,12 @@ Iterates through submissions and downloads high-resolution screenshots of studen
   python 1_scrape/zesje_scraper.py
   ```
   * *Interactive mode:* You will be prompted to confirm if you want to use the settings in `config.json` or input a new Zesje URL, problem mappings, and settings. New inputs are saved directly to `config.json`.
+* **Rubric & Sneltoetsen Auto-Extractor**:
+  ```bash
+  python 1_scrape/extract_rubric.py
+  ```
+  * *Doel:* Bepaalt automatisch welke sneltoetsen (`1..N`) op welke rubric-items slaan. Zesje kent toetsen toe op volgorde van aanmaak — dus toets `1` kan bij opgave A "alles goed" zijn, maar bij opgave B juist "alles fout" (0 pt).
+  * *Instellen:* Het script leest `config.json`, scraapt de opties en slaat `rubric_mapping.json` op. Jij hoeft per vraag alleen in te vullen welke keystroke `all_correct` is en welke `all_incorrect` (zie `examples/rubric_mapping.example.json`).
 * **DOM analysis helper**:
   ```bash
   python 1_scrape/dump_page.py
