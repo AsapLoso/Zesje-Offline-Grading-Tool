@@ -22,12 +22,16 @@ def parse_exam_url(url):
     parsed = urlparse(url)
     base_url = f"{parsed.scheme}://{parsed.netloc}"
     
+    # Extract course tag (e.g. 'tn2211' from 'tn2211-2026.zesje.tudelft.nl' or 'tn22010')
+    host = parsed.netloc.split(".")[0]
+    course_name = host.split("-")[0] if "-" in host else host
+    
     exam_id = None
     match = re.search(r"/exams/(\d+)", parsed.path)
     if match:
         exam_id = int(match.group(1))
         
-    return base_url, exam_id
+    return base_url, exam_id, course_name
 
 def detect_firefox_profile():
     appdata = os.environ.get("APPDATA", "")
@@ -55,26 +59,34 @@ def main():
     if not raw_input_url:
         raw_input_url = default_link
 
-    base_url, exam_id = parse_exam_url(raw_input_url)
+    base_url, exam_id, course_name = parse_exam_url(raw_input_url)
     if not exam_id:
         print("   Could not detect exam ID from URL. Please enter manually.")
         exam_id = int(input("   Exam ID (number): ").strip())
 
-    print(f"   -> Detected Base URL: {base_url}")
-    print(f"   -> Detected Exam ID:  {exam_id}")
+    dataset_dir_name = f"data_{course_name}_exam{exam_id}" if course_name else "data"
+    dataset_dir = os.path.join(REPO_ROOT, dataset_dir_name)
+    os.makedirs(dataset_dir, exist_ok=True)
+
+    print(f"   -> Detected Base URL:   {base_url}")
+    print(f"   -> Detected Exam ID:    {exam_id}")
+    print(f"   -> Dataset Directory:   {dataset_dir_name}/")
     print()
 
     # Load existing config or defaults
     config = {}
-    if os.path.exists(CONFIG_PATH):
+    dataset_config_path = os.path.join(dataset_dir, "config.json")
+    if os.path.exists(dataset_config_path):
         try:
-            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            with open(dataset_config_path, "r", encoding="utf-8") as f:
                 config = json.load(f)
         except Exception:
             pass
 
     config["zesje_base_url"] = base_url
     config["exam_id"] = exam_id
+    config["course_name"] = course_name
+    config["data_dir"] = dataset_dir_name
     if not config.get("firefox_profile_path"):
         config["firefox_profile_path"] = detect_firefox_profile()
     if not config.get("firefox_binary"):
@@ -163,12 +175,14 @@ def main():
         if tot_students_str.isdigit():
             config["total_students"] = int(tot_students_str)
 
-        # Save config
+        # Save config in dataset-specific folder and update active root config
+        with open(dataset_config_path, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=4)
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=4)
 
         print("\n" + "=" * 65)
-        print("[SUCCESS] config.json successfully created and saved!")
+        print(f"[SUCCESS] Config saved to {dataset_dir_name}/config.json and active config.json!")
         print("Configuration summary:")
         print(f"  Base URL:         {config['zesje_base_url']}")
         print(f"  Exam ID:          {config['exam_id']}")
