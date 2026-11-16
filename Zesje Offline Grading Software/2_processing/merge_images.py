@@ -1,6 +1,7 @@
 import os
 import json
 import sys
+import argparse
 
 # --- CONFIG & PATH RESOLUTION ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -9,43 +10,22 @@ if os.path.basename(SCRIPT_DIR) in ["1_scrape", "2_processing", "3_grading", "4_
 else:
     REPO_ROOT = SCRIPT_DIR
 
-CONFIG_PATH = os.path.join(REPO_ROOT, "config.json")
-if REPO_ROOT not in sys.path:
-    sys.path.insert(0, REPO_ROOT)
-from exam_config import load_active_config
-_, DATA_DIR = load_active_config(REPO_ROOT)
+DATA_DIR = os.path.join(REPO_ROOT, "data")
+sys.path.insert(0, REPO_ROOT)
+from exam_config import add_exam_argument, load_exam_config_from_args
 
-def load_config():
-    default_config = {
-        "zesje_base_url": "https://tn2211-2026.zesje.tudelft.nl",
-        "exam_id": 3,
-        "firefox_binary": r"C:\Program Files\Mozilla Firefox\firefox.exe",
-        "firefox_profile_path": r"C:\Users\Deuts\AppData\Roaming\Mozilla\Firefox\Profiles\39shiy81.default-release",
-        "geckodriver_path": r"C:\Geckodriver.exe",
-        "problem_mapping": {
-            "1": "1a",
-            "2": "1b",
-            "3": "1b_ext"
-        },
-        "total_students": 121
-    }
-    if os.path.exists(CONFIG_PATH):
-        try:
-            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-                config = json.load(f)
-                # Merge with default config to ensure all fields exist
-                for k, v in default_config.items():
-                    if k not in config:
-                        config[k] = v
-                return config
-        except Exception as e:
-            print(f"[Warning] Failed to load config.json: {e}. Using defaults.")
-    return default_config
+def load_config(argv=None):
+    parser = argparse.ArgumentParser(description="Merge the selected exam's local images.")
+    add_exam_argument(parser)
+    return load_exam_config_from_args(parser.parse_args(argv))
 
 from PIL import Image
 
-def merge_images():
-    base_dir = os.path.join(DATA_DIR, "zesje_images")
+def merge_images(config=None):
+    if config is None:
+        config = load_config()
+    exam_images = os.path.join(config["exam_dir"], "zesje_images")
+    base_dir = exam_images if os.path.exists(exam_images) else os.path.join(DATA_DIR, "zesje_images")
     dir_1b = os.path.join(base_dir, "1b")
     dir_1b_ext = os.path.join(base_dir, "1b_ext")
     output_dir = os.path.join(base_dir, "1b_combined")
@@ -92,4 +72,5 @@ def merge_images():
     print(f"\nDone! Combined images are in: {output_dir}")
 
 if __name__ == "__main__":
-    merge_images()
+    cfg = load_config()
+    merge_images(cfg)

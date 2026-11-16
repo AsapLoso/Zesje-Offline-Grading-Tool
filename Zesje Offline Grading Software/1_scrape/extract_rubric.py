@@ -2,22 +2,23 @@ import os
 import json
 import sys
 import time
+import argparse
+from pathlib import Path
 
 # --- PATH RESOLUTION ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
-CONFIG_PATH = os.path.join(REPO_ROOT, "config.json")
-OUTPUT_PATH = os.path.join(REPO_ROOT, "rubric_mapping.json")
+sys.path.insert(0, REPO_ROOT)
+from exam_config import add_exam_argument, load_exam_config_from_args
 
-def load_config():
-    if os.path.exists(CONFIG_PATH):
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
-    print(f"[Error] config.json not found at {CONFIG_PATH}")
-    sys.exit(1)
+def load_config(argv=None):
+    parser = argparse.ArgumentParser(description="Extract a selected exam's rubric from Zesje.")
+    add_exam_argument(parser)
+    return load_exam_config_from_args(parser.parse_args(argv))
 
 def extract_rubric():
     config = load_config()
+    output_path = Path(config["exam_dir"]) / "rubric_mapping.json"
     from selenium import webdriver
     from selenium.webdriver.firefox.service import Service
     from selenium.webdriver.firefox.options import Options
@@ -86,10 +87,10 @@ def extract_rubric():
             for it in items:
                 print(f"    Key [{it['keystroke']}] -> {it['text'][:60]}")
 
-        with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(rubric_result, f, indent=4)
         print("\n" + "=" * 65)
-        print(f"[SUCCESS] Rubric extracted and saved to: {OUTPUT_PATH}")
+        print(f"[SUCCESS] Rubric extracted and saved to: {output_path}")
         print(">>> Stap 2: Open rubric_mapping.json en geef per vraag aan")
         print("           welke keystroke 'all_correct' en 'all_incorrect' is!")
         print("=" * 65)

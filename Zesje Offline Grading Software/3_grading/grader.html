@@ -287,16 +287,23 @@
         </div>
         <div style="display: flex; gap: 8px;">
             <button id="load-btn" class="btn-primary">Load Folder</button>
-            <button id="import-btn" class="btn-primary" style="display: none;">Import CSV</button>
-            <button id="export-btn" class="btn-success" style="display: none;">Export CSV</button>
+            <button id="import-btn" class="btn-primary" style="display: none;">Import JSON</button>
+            <button id="import-xlsx-btn" class="btn-primary" style="display: none;">Import XLSX</button>
+            <button id="export-btn" class="btn-success" style="display: none;">Export JSON</button>
+            <button id="export-xlsx-btn" class="btn-success" style="display: none;">Export XLSX</button>
         </div>
         <input type="file" id="file-input" webkitdirectory directory multiple />
         <input type="file" id="csv-input" accept=".csv" style="display: none;" />
+        <input type="file" id="xlsx-input" accept=".xlsx" style="display: none;" />
+        <input type="file" id="xlsx-input" accept=".xlsx" style="display: none;" />
     </header>
 
     <div id="problem-tabs" class="tabs" style="display: none;">
-        <!-- Tabs injected by JS -->
-    </div>
+
+                <button class="tab-btn" data-prob="1">1A</button>
+                <button class="tab-btn" data-prob="2">1B</button>
+                <button class="tab-btn" data-prob="3">1B_EXT</button>
+        </div>
 
     <main id="main-area">
         <div id="image-container">
@@ -319,25 +326,15 @@
         </div>
         
         <div class="rubric-list">
-            <button class="rubric-toggle" data-id="LHS_RHS" data-score="1">
+
+            <button class="rubric-toggle" data-id="10" data-score="1" data-keystroke="1">
                 <span class="pts-badge">1</span>
-                <span class="rubric-text">calculate LHS and RHS to demonstrate solution</span>
+                <span class="rubric-text">Correct (1 pt - Alles goed)</span>
             </button>
-            <button class="rubric-toggle" data-id="tau" data-score="1">
-                <span class="pts-badge">1</span>
-                <span class="rubric-text">determine tau</span>
-            </button>
-            <button class="rubric-toggle" data-id="I_0" data-score="1">
-                <span class="pts-badge">1</span>
-                <span class="rubric-text">determine I_0</span>
-            </button>
-            <button class="rubric-toggle" data-id="I_1" data-score="1">
-                <span class="pts-badge">1</span>
-                <span class="rubric-text">find I_1</span>
-            </button>
-            <button class="rubric-toggle" data-id="Blank" data-score="0">
-                <span class="pts-badge">0</span>
-                <span class="rubric-text">Blank</span>
+
+            <button class="rubric-toggle" data-id="11" data-score="1" data-keystroke="2">
+                <span class="pts-badge">2</span>
+                <span class="rubric-text">Incorrect (0 pt - Fout)</span>
             </button>
         </div>
 
@@ -350,7 +347,23 @@
     <div id="toast" class="toast">Score Saved!</div>
 
     <script>
-        // --- State ---
+        
+        // --- DYNAMIC CONFIGURATION (injected by generate_grader_html.py) ---
+        const DYNAMIC_STUDENT_IDS = [];
+        const DYNAMIC_PROBLEM_MAPPING = {"1": "1a", "2": "1b", "3": "1b_ext"};
+        const DYNAMIC_RUBRIC_OPTIONS = [{"keystroke": "1", "feedback_id": "10", "text": "Correct (1 pt - Alles goed)"}, {"keystroke": "2", "feedback_id": "11", "text": "Incorrect (0 pt - Fout)"}];
+        const DYNAMIC_COURSE = "tn2211";
+        const DYNAMIC_EXAM_ID = 3;
+
+
+        // --- DYNAMIC CONFIGURATION (injected by generate_grader_html.py) ---
+        const DYNAMIC_STUDENT_IDS = [];
+        const DYNAMIC_PROBLEM_MAPPING = {"1": "1a", "2": "1b", "3": "1b_ext"};
+        const DYNAMIC_RUBRIC_OPTIONS = [{"keystroke": "1", "feedback_id": "10", "text": "Correct (1 pt - Alles goed)"}, {"keystroke": "2", "feedback_id": "11", "text": "Incorrect (0 pt - Fout)"}];
+        const DYNAMIC_COURSE = "tn2211";
+        const DYNAMIC_EXAM_ID = 3;
+
+// --- State ---
         let groupedFiles = {}; // { "submissionID": { "problemID": File } }
         let submissionIds = [];
         let currentSubIndex = 0;
@@ -408,6 +421,10 @@
                 emptyState.style.display = 'none';
                 imgElement.style.display = 'block';
                 exportBtn.style.display = 'block';
+                importXlsxBtn.style.display = 'block';
+                exportXlsxBtn.style.display = 'block';
+                importXlsxBtn.style.display = 'block';
+                exportXlsxBtn.style.display = 'block';
                 importBtn.style.display = 'block';
                 tabsContainer.style.display = 'flex';
                 
@@ -643,7 +660,21 @@
                 if (submissionIds.length > 0) loadSubmission();
             };
             reader.readAsText(file);
-            csvInput.value = ''; // Reset input so same file can be imported again if needed
+            csvInput.value = '';
+
+        const importXlsxBtn = document.getElementById('import-xlsx-btn');
+        const exportXlsxBtn = document.getElementById('export-xlsx-btn');
+        const xlsxInput = document.getElementById('xlsx-input');
+
+        importXlsxBtn.addEventListener('click', () => xlsxInput.click());
+        exportXlsxBtn.addEventListener('click', exportToXLSX);
+
+        xlsxInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            await importFromXLSX(file);
+            xlsxInput.value = '';
+        });
         });
 
         // --- PINCH TO ZOOM & PAN ---
@@ -745,6 +776,204 @@
             }
             lastTap = currentTime;
         });
+    
+        // --- XLSX EXPORT/IMPORT (requires SheetJS) ---
+        async function exportToXLSX() {
+            if (Object.keys(grades).length === 0) {
+                alert("No grades recorded yet.");
+                return;
+            }
+
+            // Load SheetJS dynamically
+            if (typeof XLSX === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js';
+                document.head.appendChild(script);
+                await new Promise(r => script.onload = r);
+            }
+
+            const wb = XLSX.utils.book_new();
+            const ws_data = [];
+
+            // Headers from template
+            ws_data.push(["Student ID", "Set Aside", "Grading Status", ...getCriteriaHeaders(), "Remarks"]);
+
+            for (const path in grades) {
+                const g = grades[path];
+                const row = [
+                    g.submission,
+                    g.set_aside || false,
+                    g.grading_status || "PENDING",
+                    ...getCriteriaValues(g.selections),
+                    g.remarks || ""
+                ];
+                ws_data.push(row);
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            XLSX.utils.book_append_sheet(wb, ws, "Grades");
+            XLSX.writeFile(wb, `zesje_grades_${DYNAMIC_COURSE}_exam${DYNAMIC_EXAM_ID}.xlsx`);
+            showToast("Exported to XLSX!");
+        }
+
+        function getCriteriaHeaders() {
+            return DYNAMIC_RUBRIC_OPTIONS.map(opt => opt.text);
+        }
+
+        function getCriteriaValues(selections) {
+            const headers = getCriteriaHeaders();
+            return headers.map((_, i) => selections.includes(String(i+1)) ? 1 : 0);
+        }
+
+        async function importFromXLSX(file) {
+            if (typeof XLSX === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js';
+                document.head.appendChild(script);
+                await new Promise(r => script.onload = r);
+            }
+
+            const data = await file.arrayBuffer();
+            const wb = XLSX.read(data);
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+            let imported = 0;
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row[0]) continue;
+                const studentId = String(row[0]);
+                const setAside = row[1] === true || row[1] === "TRUE";
+                const status = row[2] || "PENDING";
+                const criteriaVals = row.slice(3, -1);
+                const remarks = row[row.length - 1] || "";
+
+                const selections = [];
+                criteriaVals.forEach((v, idx) => {
+                    if (v === 1 || v === "1" || v === true) {
+                        selections.push(String(idx + 1));
+                    }
+                });
+
+                // Find the file path for this student/problem
+                // This is simplified - in reality we'd need to match by student ID
+                grades[`${DYNAMIC_PROBLEM_MAPPING[Object.keys(DYNAMIC_PROBLEM_MAPPING)[0]]}/${studentId}.jpg`] = {
+                    problem: Object.keys(DYNAMIC_PROBLEM_MAPPING)[0],
+                    submission: studentId,
+                    filename: `${studentId}.jpg`,
+                    score: selections.length,
+                    selections: selections,
+                    set_aside: setAside,
+                    grading_status: status,
+                    remarks: remarks
+                };
+                imported++;
+            }
+
+            localStorage.setItem('zesje_grades', JSON.stringify(grades));
+            showToast(`Imported ${imported} grades from XLSX!`);
+            if (submissionIds.length > 0) loadSubmission();
+        }
+
+    
+        // --- XLSX EXPORT/IMPORT (requires SheetJS) ---
+        async function exportToXLSX() {
+            if (Object.keys(grades).length === 0) {
+                alert("No grades recorded yet.");
+                return;
+            }
+
+            // Load SheetJS dynamically
+            if (typeof XLSX === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js';
+                document.head.appendChild(script);
+                await new Promise(r => script.onload = r);
+            }
+
+            const wb = XLSX.utils.book_new();
+            const ws_data = [];
+
+            // Headers from template
+            ws_data.push(["Student ID", "Set Aside", "Grading Status", ...getCriteriaHeaders(), "Remarks"]);
+
+            for (const path in grades) {
+                const g = grades[path];
+                const row = [
+                    g.submission,
+                    g.set_aside || false,
+                    g.grading_status || "PENDING",
+                    ...getCriteriaValues(g.selections),
+                    g.remarks || ""
+                ];
+                ws_data.push(row);
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            XLSX.utils.book_append_sheet(wb, ws, "Grades");
+            XLSX.writeFile(wb, `zesje_grades_${DYNAMIC_COURSE}_exam${DYNAMIC_EXAM_ID}.xlsx`);
+            showToast("Exported to XLSX!");
+        }
+
+        function getCriteriaHeaders() {
+            return DYNAMIC_RUBRIC_OPTIONS.map(opt => opt.text);
+        }
+
+        function getCriteriaValues(selections) {
+            const headers = getCriteriaHeaders();
+            return headers.map((_, i) => selections.includes(String(i+1)) ? 1 : 0);
+        }
+
+        async function importFromXLSX(file) {
+            if (typeof XLSX === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js';
+                document.head.appendChild(script);
+                await new Promise(r => script.onload = r);
+            }
+
+            const data = await file.arrayBuffer();
+            const wb = XLSX.read(data);
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+            let imported = 0;
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row[0]) continue;
+                const studentId = String(row[0]);
+                const setAside = row[1] === true || row[1] === "TRUE";
+                const status = row[2] || "PENDING";
+                const criteriaVals = row.slice(3, -1);
+                const remarks = row[row.length - 1] || "";
+
+                const selections = [];
+                criteriaVals.forEach((v, idx) => {
+                    if (v === 1 || v === "1" || v === true) {
+                        selections.push(String(idx + 1));
+                    }
+                });
+
+                // Find the file path for this student/problem
+                // This is simplified - in reality we'd need to match by student ID
+                grades[`${DYNAMIC_PROBLEM_MAPPING[Object.keys(DYNAMIC_PROBLEM_MAPPING)[0]]}/${studentId}.jpg`] = {
+                    problem: Object.keys(DYNAMIC_PROBLEM_MAPPING)[0],
+                    submission: studentId,
+                    filename: `${studentId}.jpg`,
+                    score: selections.length,
+                    selections: selections,
+                    set_aside: setAside,
+                    grading_status: status,
+                    remarks: remarks
+                };
+                imported++;
+            }
+
+            localStorage.setItem('zesje_grades', JSON.stringify(grades));
+            showToast(`Imported ${imported} grades from XLSX!`);
+            if (submissionIds.length > 0) loadSubmission();
+        }
+
     </script>
 </body>
 </html>

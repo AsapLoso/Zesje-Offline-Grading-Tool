@@ -3,17 +3,25 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.compound-engineering/
+.agents/
 
-# Local environment files
+# Local environment & backups
 .env
-.venv
+.venv/
+**/.venv/
 venv/
 env/
 ENV/
+*.bak
+*.bak*
+*-DESKTOP-*.py
 
-# Large binary student images, booklets, and database files
-Zesje Offline Grading Software/data/
+# Large binary student images, booklets, browser profiles, and database files
 **/data/
+**/grading_data/
+**/scratch/
+scratch/
 
 # OS/System files
 .DS_Store
