@@ -10,7 +10,10 @@ else:
     REPO_ROOT = SCRIPT_DIR
 
 CONFIG_PATH = os.path.join(REPO_ROOT, "config.json")
-DATA_DIR = os.path.join(REPO_ROOT, "data")
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+from exam_config import load_active_config
+_, DATA_DIR = load_active_config(REPO_ROOT)
 
 def load_config():
     default_config = {

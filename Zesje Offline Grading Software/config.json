@@ -1,13 +1,12 @@
 {
-    "zesje_base_url": "https://tn2211-2026.zesje.tudelft.nl",
-    "exam_id": 3,
+    "zesje_base_url": "https://tn22010-2026.zesje.tudelft.nl",
+    "exam_id": null,
+    "course_name": "",
+    "data_dir": "data",
     "firefox_binary": "C:\\Program Files\\Mozilla Firefox\\firefox.exe",
-    "firefox_profile_path": "C:\\Users\\Deuts\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\30ehn9l9.default-release-1728564156195",
-    "geckodriver_path": "C:\\Geckodriver.exe",
-    "problem_mapping": {
-        "1": "1a",
-        "2": "1b",
-        "3": "1b_ext"
-    },
-    "total_students": 128
+    "firefox_profile_path": "",
+    "geckodriver_path": "geckodriver.exe",
+    "problem_mapping": {},
+    "n_extra_pages": 0,
+    "total_students": 0
 }
