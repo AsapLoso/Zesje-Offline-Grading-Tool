@@ -33,7 +33,7 @@ def list_active_exams() -> List[Path]:
 
 
 def list_archived_exams() -> List[Path]:
-    return sorted(_exam_dirs(DATA_DIR / "archive") + _exam_dirs(DATA_DIR.parent / "grading_data"), key=lambda child: child.name.casefold())
+    return _exam_dirs(DATA_DIR / "archive")
 
 
 def _resolve_exam(exam: str) -> Path:
