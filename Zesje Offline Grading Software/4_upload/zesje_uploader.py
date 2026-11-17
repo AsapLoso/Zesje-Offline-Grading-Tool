@@ -54,6 +54,11 @@ def get_course_paths(config: Dict[str, Any]) -> Tuple[Path, Path, Path, Path]:
     return rubric_path, populated_path, progress_path, exceptions_path
 
 
+def _zesje_keystroke(index: int) -> str:
+    """Map 0-based rubric option index to Zesje UI shortcut ('1'..'9', '0' for 10th)."""
+    return "0" if index == 9 else str(index + 1)
+
+
 def load_rubric_mapping(rubric_path: Path) -> Dict[str, Any]:
     """Load rubric mapping with keystroke -> feedback_id mapping."""
     if not rubric_path.exists():
@@ -106,7 +111,7 @@ def load_populated_grades(populated_path: Path) -> List[Dict[str, Any]]:
         for i, crit_col in enumerate(criteria_columns):
             val = ws.cell(row=row, column=crit_col).value
             if val is not None and str(val).strip() in ("1", "1.0", 1, True):
-                criteria[str(i + 1)] = 1
+                criteria[_zesje_keystroke(i)] = 1
 
         set_aside_val = ws.cell(row=row, column=set_aside_col).value if set_aside_col else "FALSE"
         set_aside = str(set_aside_val).strip().upper() == "TRUE"
@@ -370,7 +375,7 @@ def parse_live_xlsx(export_bytes: bytes, problem_mapping: Dict[str, str]) -> Dic
                 for i, crit_col in enumerate(criteria_cols):
                     val = ws.cell(row=row, column=crit_col).value
                     if val is not None and str(val).strip() in ("1", "1.0", 1, True):
-                        criteria_vals[str(i + 1)] = 1
+                        criteria_vals[_zesje_keystroke(i)] = 1
 
                 remarks = ""
                 if prob_id in remarks_cols:
